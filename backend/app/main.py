@@ -6,10 +6,10 @@ from app.api import auth, games
 
 app = FastAPI(title="Cognitive Gaming API")
 
-# Allow frontend to call backend (CORS)
+# Permissive CORS for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
