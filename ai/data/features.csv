@@ -1,0 +1,2 @@
+patient_id,total_sessions,total_attempts,total_mistakes,total_score,total_time_taken_seconds,average_accuracy,average_reaction_time_ms,mistake_rate,completion_rate,average_score,current_difficulty,previous_accuracy,recent_accuracy,performance_trend
+1,26,52,2,50.0,283.05,0.391,1359.2,0.0385,1.0,1.92,easy,0.38,0.8889,improving
