@@ -1,25 +1,58 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react';
+import Login from './pages/Login';
+import PatientHome from './pages/PatientHome';
+import GameSelection from './pages/GameSelection';
+import Reminders from './pages/Reminders';
+import Progress from './pages/Progress';
+import CaregiverDashboard from './pages/CaregiverDashboard';
+import { api } from './services/api';
 
 function App() {
-  const [message, setMessage] = useState('')
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [user, setUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState('home');
 
   useEffect(() => {
-    fetch('http://localhost:8000/')
-      .then(res => res.json())
-      .then(data => setMessage(data.message))
-      .catch(err => console.error(err))
-  }, [])
+    if (token) {
+      api.getMe(token)
+        .then(setUser)
+        .catch(() => {
+          localStorage.removeItem('token');
+          setToken(null);
+        });
+    }
+  }, [token]);
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">
-          Cognitive Gaming Platform
-        </h1>
-        <p className="text-gray-700">Backend says: {message}</p>
-      </div>
-    </div>
-  )
+  const handleLogin = (newToken) => {
+    setToken(newToken);
+    setCurrentPage('home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    setCurrentPage('home');
+  };
+
+  if (!token || !user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  if (user.role === 'caregiver' || user.role === 'admin') {
+    return <CaregiverDashboard onLogout={handleLogout} />;
+  }
+
+  switch (currentPage) {
+    case 'games':
+      return <GameSelection onBack={() => setCurrentPage('home')} />;
+    case 'reminders':
+      return <Reminders onBack={() => setCurrentPage('home')} />;
+    case 'progress':
+      return <Progress onBack={() => setCurrentPage('home')} />;
+    default:
+      return <PatientHome onNavigate={setCurrentPage} onLogout={handleLogout} />;
+  }
 }
 
-export default App
+export default App;
