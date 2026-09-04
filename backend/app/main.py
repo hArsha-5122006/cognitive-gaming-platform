@@ -1,16 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import init_db
+from app import models  # noqa: F401  (imports all models)
 
 app = FastAPI(title="Cognitive Gaming API")
 
 # Allow frontend to call backend (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+    print("Database initialized")
 
 @app.get("/")
 def read_root():
