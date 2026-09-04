@@ -1,4 +1,6 @@
-import { useState } from 'react';
+from pathlib import Path
+
+content = '''import { useState } from 'react';
 import MemoryGame from '../games/MemoryGame';
 import SequenceGame from '../games/SequenceGame';
 import AttentionGame from '../games/AttentionGame';
@@ -52,3 +54,9 @@ function GameSelection({ onBack }) {
 }
 
 export default GameSelection;
+'''
+
+path = Path("frontend/src/pages/GameSelection.jsx")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("GameSelection.jsx updated for Language Game!")
