@@ -18,6 +18,7 @@ class Patient(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     user = relationship("User", backref="patient")
+    caregivers = relationship("Caregiver", secondary="caregiver_patient_association", back_populates="patients")
     game_sessions = relationship("GameSession", back_populates="patient")
     cognitive_scores = relationship("CognitiveScore", back_populates="patient")
     reminders = relationship("Reminder", back_populates="patient")

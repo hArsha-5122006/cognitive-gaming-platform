@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import init_db
-from app import models  # noqa: F401  (imports all models)
+from app import models  # noqa: F401
+from app.api import auth
 
 app = FastAPI(title="Cognitive Gaming API")
 
@@ -18,6 +19,8 @@ app.add_middleware(
 def on_startup():
     init_db()
     print("Database initialized")
+
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 @app.get("/")
 def read_root():
