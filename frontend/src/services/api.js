@@ -19,5 +19,17 @@ export const api = {
     });
     if (!res.ok) throw new Error('Not authenticated');
     return res.json();
+  },
+  async submitGameResult(token, resultData) {
+    const res = await fetch(`${API_BASE_URL}/api/games/submit_result`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(resultData),
+    });
+    if (!res.ok) throw new Error('Failed to submit result');
+    return res.json();
   }
 };

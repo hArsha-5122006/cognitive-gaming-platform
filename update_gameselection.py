@@ -1,4 +1,6 @@
-import { useState } from 'react';
+from pathlib import Path
+
+content = '''import { useState } from 'react';
 import useGameSession from '../hooks/useGameSession';
 
 function GameSelection({ onBack }) {
@@ -102,3 +104,9 @@ function GameSelection({ onBack }) {
 }
 
 export default GameSelection;
+'''
+
+path = Path("frontend/src/pages/GameSelection.jsx")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("Updated GameSelection.jsx successfully!")
