@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 from app.core.database import get_db
 from app.models.patient import Patient
 from app.models.game_session import GameSession
 from app.models.game_result import GameResult
+from app.services.performance_service import calculate_cognitive_scores
 
 router = APIRouter()
 
 @router.get("/patient/{patient_id}")
 def get_patient_performance(patient_id: int, db: Session = Depends(get_db)):
-    # Verify patient exists
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -43,3 +42,11 @@ def get_patient_performance(patient_id: int, db: Session = Depends(get_db)):
         }
         result.append(session_data)
     return result
+
+@router.get("/cognitive_score/{patient_id}")
+def get_cognitive_score(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    scores = calculate_cognitive_scores(db, patient_id)
+    return scores
