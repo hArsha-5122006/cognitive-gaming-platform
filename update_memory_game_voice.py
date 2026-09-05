@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+from pathlib import Path
+
+content = '''import { useState, useEffect, useRef } from 'react';
 import useGameSession from '../hooks/useGameSession';
 import { speak } from '../services/voice';
 
@@ -241,3 +243,9 @@ function MemoryGame({ onExit }) {
 }
 
 export default MemoryGame;
+'''
+
+path = Path("frontend/src/games/MemoryGame.jsx")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("MemoryGame.jsx updated with voice instructions!")
