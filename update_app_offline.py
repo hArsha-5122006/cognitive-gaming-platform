@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+from pathlib import Path
+
+content = '''import { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import PatientHome from './pages/PatientHome';
 import GameSelection from './pages/GameSelection';
@@ -99,3 +101,8 @@ function App() {
 }
 
 export default App;
+'''
+
+path = Path("frontend/src/App.jsx")
+path.write_text(content.strip(), encoding='utf-8')
+print("App.jsx updated with offline banner and sync!")

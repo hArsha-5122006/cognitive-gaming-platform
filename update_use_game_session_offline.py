@@ -1,4 +1,6 @@
-import { useState, useRef, useCallback } from 'react';
+from pathlib import Path
+
+content = '''import { useState, useRef, useCallback } from 'react';
 import { api } from '../services/api';
 
 const useGameSession = (gameId, initialDifficulty = 'easy') => {
@@ -75,3 +77,8 @@ const useGameSession = (gameId, initialDifficulty = 'easy') => {
 };
 
 export default useGameSession;
+'''
+
+path = Path("frontend/src/hooks/useGameSession.js")
+path.write_text(content.strip(), encoding='utf-8')
+print("useGameSession.js updated with offline save!")

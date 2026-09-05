@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+from pathlib import Path
+
+content = '''import { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { t } from '../services/translations';
 
@@ -128,3 +130,8 @@ function Reminders({ onBack }) {
 }
 
 export default Reminders;
+'''
+
+path = Path("frontend/src/pages/Reminders.jsx")
+path.write_text(content.strip(), encoding='utf-8')
+print("Reminders.jsx updated with offline caching!")
