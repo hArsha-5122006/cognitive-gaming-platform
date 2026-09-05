@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.adaptive_service import recommend_difficulty
+from app.services.recommendation_service import recommend_next_game
 
 router = APIRouter()
 
@@ -12,3 +13,10 @@ def get_recommended_difficulty(
     db: Session = Depends(get_db)
 ):
     return recommend_difficulty(db, patient_id, game_id)
+
+@router.get("/next_game/{patient_id}")
+def get_next_game_recommendation(
+    patient_id: int,
+    db: Session = Depends(get_db)
+):
+    return recommend_next_game(db, patient_id)
