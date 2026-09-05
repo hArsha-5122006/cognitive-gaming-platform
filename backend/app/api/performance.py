@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.api.auth import get_current_user
+from app.core.permissions import get_patient_if_authorized
 from app.models.patient import Patient
 from app.models.game_session import GameSession
 from app.models.game_result import GameResult
@@ -10,8 +12,12 @@ from app.services.analytics_service import get_patient_analytics
 router = APIRouter()
 
 @router.get("/patient/{patient_id}")
-def get_patient_performance(patient_id: int, db: Session = Depends(get_db)):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def get_patient_performance(
+    patient_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    patient = get_patient_if_authorized(patient_id, current_user, db)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     sessions = db.query(GameSession).filter(GameSession.patient_id == patient_id).all()
@@ -44,16 +50,24 @@ def get_patient_performance(patient_id: int, db: Session = Depends(get_db)):
     return result
 
 @router.get("/cognitive_score/{patient_id}")
-def get_cognitive_score(patient_id: int, db: Session = Depends(get_db)):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def get_cognitive_score(
+    patient_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    patient = get_patient_if_authorized(patient_id, current_user, db)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     scores = calculate_cognitive_scores(db, patient_id)
     return scores
 
 @router.get("/analytics/{patient_id}")
-def get_analytics(patient_id: int, db: Session = Depends(get_db)):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def get_analytics(
+    patient_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    patient = get_patient_if_authorized(patient_id, current_user, db)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return get_patient_analytics(db, patient_id)

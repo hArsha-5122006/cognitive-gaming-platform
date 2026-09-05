@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.api.auth import get_current_user
+from app.core.permissions import get_patient_if_authorized
 from app.models.patient import Patient
 from app.models.reminder import Reminder
 from app.schemas.reminder import ReminderCreate, ReminderUpdate, ReminderOut
