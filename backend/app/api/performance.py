@@ -5,6 +5,7 @@ from app.models.patient import Patient
 from app.models.game_session import GameSession
 from app.models.game_result import GameResult
 from app.services.performance_service import calculate_cognitive_scores
+from app.services.analytics_service import get_patient_analytics
 
 router = APIRouter()
 
@@ -13,7 +14,6 @@ def get_patient_performance(patient_id: int, db: Session = Depends(get_db)):
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    
     sessions = db.query(GameSession).filter(GameSession.patient_id == patient_id).all()
     result = []
     for session in sessions:
@@ -50,3 +50,10 @@ def get_cognitive_score(patient_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Patient not found")
     scores = calculate_cognitive_scores(db, patient_id)
     return scores
+
+@router.get("/analytics/{patient_id}")
+def get_analytics(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return get_patient_analytics(db, patient_id)

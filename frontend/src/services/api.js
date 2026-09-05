@@ -39,6 +39,14 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch reminders');
     return res.json();
   },
+  async getAnalytics(token, patientId) {
+    const res = await fetch(`${API_BASE_URL}/api/performance/analytics/${patientId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch analytics');
+    return res.json();
+  },
+
   async getCaregiverDashboard(token) {
     const res = await fetch(`${API_BASE_URL}/api/caregivers/dashboard`, {
       headers: { 'Authorization': `Bearer ${token}` },
