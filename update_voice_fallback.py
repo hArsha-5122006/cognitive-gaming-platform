@@ -1,4 +1,6 @@
-// Voice utility with language support and fallback
+from pathlib import Path
+
+content = '''// Voice utility with language support and fallback
 import { getLanguage } from './translations';
 
 const localeMap = {
@@ -85,3 +87,9 @@ export function stopListening() {
     recognition = null;
   }
 }
+'''
+
+path = Path("frontend/src/services/voice.js")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("voice.js updated with locale mapping and fallback!")
