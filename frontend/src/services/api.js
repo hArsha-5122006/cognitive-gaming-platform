@@ -39,6 +39,14 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch reminders');
     return res.json();
   },
+  async getCaregiverDashboard(token) {
+    const res = await fetch(`${API_BASE_URL}/api/caregivers/dashboard`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch dashboard');
+    return res.json();
+  },
+
   async completeReminder(token, reminderId) {
     const res = await fetch(`${API_BASE_URL}/api/reminders/${reminderId}/complete`, {
       method: 'PATCH',
