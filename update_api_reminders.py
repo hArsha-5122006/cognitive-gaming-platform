@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8000';
+from pathlib import Path
+
+content = '''const API_BASE_URL = 'http://localhost:8000';
 
 export const api = {
   async login(email, password) {
@@ -48,3 +50,8 @@ export const api = {
     return res.json();
   }
 };
+'''
+
+path = Path("frontend/src/services/api.js")
+path.write_text(content.strip(), encoding='utf-8')
+print("api.js updated with reminder methods!")
