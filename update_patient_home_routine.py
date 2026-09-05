@@ -1,4 +1,6 @@
-import { useState } from 'react';
+from pathlib import Path
+
+content = '''import { useState } from 'react';
 import { speak, startListening, stopListening } from '../services/voice';
 import { t } from '../services/translations';
 
@@ -116,3 +118,8 @@ function PatientHome({ onNavigate, onLogout, language, onToggleLanguage }) {
 }
 
 export default PatientHome;
+'''
+
+path = Path("frontend/src/pages/PatientHome.jsx")
+path.write_text(content.strip(), encoding='utf-8')
+print("PatientHome.jsx updated with routine button!")
