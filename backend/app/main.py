@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import init_db
 from app import models  # noqa: F401
-from app.api import auth, games, performance
+from app.api import auth, games, performance, recommendations
 
 app = FastAPI(title="Cognitive Gaming API")
 
@@ -23,6 +23,7 @@ def on_startup():
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(games.router, prefix="/api/games", tags=["games"])
 app.include_router(performance.router, prefix="/api/performance", tags=["performance"])
+app.include_router(recommendations.router, prefix="/api/recommendations", tags=["recommendations"])
 
 @app.get("/")
 def read_root():
