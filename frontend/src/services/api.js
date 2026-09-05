@@ -47,6 +47,14 @@ export const api = {
     return res.json();
   },
 
+  async getCaregiverAlerts(token, patientId) {
+    const res = await fetch(`${API_BASE_URL}/api/caregivers/alerts/${patientId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch alerts');
+    return res.json();
+  },
+
   async getCaregiverDashboard(token) {
     const res = await fetch(`${API_BASE_URL}/api/caregivers/dashboard`, {
       headers: { 'Authorization': `Bearer ${token}` },
