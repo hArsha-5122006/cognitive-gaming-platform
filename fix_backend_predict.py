@@ -1,4 +1,6 @@
-import pickle
+from pathlib import Path
+
+content = '''import pickle
 from pathlib import Path
 
 MODEL_PATH = Path("ai/saved_models/difficulty_model.pkl")
@@ -17,7 +19,12 @@ def predict_difficulty(features):
         return None
     model = data['model']
     reverse_map = data['reverse_map']
-    # XGBoost predict accepts list of lists
-    X = [features]  # features is a list
+    X = [features]
     pred = model.predict(X)[0]
     return reverse_map[int(pred)]
+'''
+
+path = Path("backend/ai/models/predict.py")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("backend/ai/models/predict.py now uses pickle.")

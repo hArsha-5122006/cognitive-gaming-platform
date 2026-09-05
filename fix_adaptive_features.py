@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from pathlib import Path
+
+content = '''from sqlalchemy.orm import Session
 from app.models.game_session import GameSession
 import sys
 from pathlib import Path
@@ -146,3 +148,9 @@ def recommend_difficulty(db, patient_id, game_id):
         "reason": reason,
         "source": "rule"
     }
+'''
+
+path = Path("backend/app/services/adaptive_service.py")
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(content.strip(), encoding='utf-8')
+print("adaptive_service.py fixed!")
