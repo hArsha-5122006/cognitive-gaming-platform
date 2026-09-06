@@ -15,10 +15,8 @@ function Progress({ onBack }) {
       setLoading(false);
       return;
     }
-    // For patient role, we need patient id. We'll use 1 for demo, or from /me? We'll fetch /me first.
     api.getMe(token)
       .then(user => {
-        // Patient ID is not in user; we need to fetch via patient endpoint? We'll assume id=1 for now.
         const patientId = 1; // hardcoded for demo; later we can link.
         return api.getAnalytics(token, patientId);
       })
@@ -124,7 +122,7 @@ function Progress({ onBack }) {
                       <p className="text-sm text-gray-500">{s.date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-gray-700">Accuracy: {s.accuracy ? (s.accuracy * 100).toFixed(1) + '%' : 'N/A'}</p>
+                      <p className="text-lg font-bold text-gray-700">Accuracy: {s.accuracy !== null && s.accuracy !== undefined ? (s.accuracy * 100).toFixed(1) + '%' : 'N/A'}</p>
                       <p className="text-sm text-gray-500">Score: {s.score}</p>
                     </div>
                   </div>
