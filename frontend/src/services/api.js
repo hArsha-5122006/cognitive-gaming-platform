@@ -20,6 +20,14 @@ export const api = {
     if (!res.ok) throw new Error('Not authenticated');
     return res.json();
   },
+  async getPatientId(token) {
+    const res = await fetch(`${API_BASE_URL}/api/auth/me/patient`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch patient id');
+    const data = await res.json();
+    return data.id;
+  },
   async submitGameResult(token, resultData) {
     const res = await fetch(`${API_BASE_URL}/api/games/submit_result`, {
       method: 'POST',
@@ -68,8 +76,6 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch alerts');
     return res.json();
   },
-
-  // Offline helpers
   savePendingResult(resultData) {
     let pending = JSON.parse(localStorage.getItem('pendingGameResults') || '[]');
     pending.push(resultData);

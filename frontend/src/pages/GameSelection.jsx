@@ -6,21 +6,45 @@ import PatternGame from '../games/PatternGame';
 import ReactionGame from '../games/ReactionGame';
 import LanguageGame from '../games/LanguageGame';
 import { t } from '../services/translations';
+import { api } from '../services/api';
 
 function GameSelection({ onBack }) {
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [difficultyMap, setDifficultyMap] = useState({});
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    // Hardcoded patientId=1 for demo; in real app, you'd get from /me or context
-    fetch('http://localhost:8000/api/recommendations/next_game/1', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    .then(res => res.json())
-    .then(data => setAiSuggestion(data))
-    .catch(console.error);
+
+    // Get patient id
+    api.getPatientId(token)
+      .then(patientId => {
+        // Fetch AI next game suggestion
+        fetch(`http://localhost:8000/api/recommendations/next_game/${patientId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(res => res.json())
+        .then(data => setAiSuggestion(data))
+        .catch(console.error);
+
+        // Fetch difficulty recommendation for each game
+        const gameIds = [1, 2, 3, 4, 5, 6];
+        gameIds.forEach(gameId => {
+          fetch(`http://localhost:8000/api/recommendations/difficulty/${patientId}/${gameId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then(res => res.json())
+          .then(data => {
+            setDifficultyMap(prev => ({
+              ...prev,
+              [gameId]: data.recommended_difficulty,
+            }));
+          })
+          .catch(console.error);
+        });
+      })
+      .catch(console.error);
   }, []);
 
   const games = [
@@ -62,12 +86,17 @@ function GameSelection({ onBack }) {
         {games.map((game) => (
           <button
             key={game.id}
-            className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition text-center"
+            className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition text-center relative"
             onClick={() => setSelectedGameId(game.id)}
           >
             <span className="text-6xl">{game.emoji}</span>
             <p className="text-3xl font-semibold mt-4 text-gray-800">{game.name}</p>
             <p className="text-xl text-gray-500 mt-2">{game.description}</p>
+            {difficultyMap[game.id] && (
+              <span className="absolute top-2 right-2 bg-blue-100 text-blue-800 text-sm font-bold px-2 py-1 rounded-full">
+                AI: {difficultyMap[game.id]}
+              </span>
+            )}
           </button>
         ))}
       </div>

@@ -15,9 +15,9 @@ function Progress({ onBack }) {
       setLoading(false);
       return;
     }
-    api.getMe(token)
-      .then(user => {
-        const patientId = 1; // hardcoded for demo; later we can link.
+    // Get current patient ID dynamically
+    api.getPatientId(token)
+      .then(patientId => {
         return api.getAnalytics(token, patientId);
       })
       .then(data => {
@@ -84,13 +84,11 @@ function Progress({ onBack }) {
 
       {!loading && !error && analytics && (
         <div className="space-y-8">
-          {/* Line chart */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Accuracy Trend</h2>
             {renderLineChart() || <p className="text-gray-500">Not enough data to show trend.</p>}
           </div>
 
-          {/* Category scores */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Category Performance</h2>
             {analytics.category_trend && Object.keys(analytics.category_trend).length > 0 ? (
@@ -110,7 +108,6 @@ function Progress({ onBack }) {
             )}
           </div>
 
-          {/* Session history */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Recent Sessions</h2>
             {analytics.sessions && analytics.sessions.length > 0 ? (

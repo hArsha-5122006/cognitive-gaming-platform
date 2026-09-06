@@ -60,7 +60,6 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # Auto-create profile based on role
     if new_user.role == 'patient':
         db.add(Patient(user_id=new_user.id))
     elif new_user.role == 'caregiver':
@@ -88,3 +87,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 @router.get("/me", response_model=UserOut)
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.get("/me/patient")
+def read_current_patient(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != 'patient':
+        raise HTTPException(status_code=403, detail="Not a patient")
+    patient = db.query(Patient).filter(Patient.user_id == current_user.id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+    return patient
