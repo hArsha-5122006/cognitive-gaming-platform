@@ -16,6 +16,7 @@ from app.core.security import (
 from app.models.user import User
 from app.models.patient import Patient
 from app.models.caregiver import Caregiver
+from app.models.daily_routine import DailyRoutineItem
 from app.schemas.user import UserCreate, UserOut, Token
 
 router = APIRouter()
@@ -61,10 +62,27 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     if new_user.role == 'patient':
-        db.add(Patient(user_id=new_user.id))
+        patient = Patient(user_id=new_user.id)
+        db.add(patient)
+        db.commit()
+        db.refresh(patient)
+        # Add default daily routine items
+        default_routines = [
+            {"title": "Morning Wake-up", "scheduled_time": "7:00 AM"},
+            {"title": "Breakfast", "scheduled_time": "8:00 AM"},
+            {"title": "Medicine", "scheduled_time": "10:00 AM"},
+            {"title": "Drink Water", "scheduled_time": "12:00 PM"},
+            {"title": "Lunch", "scheduled_time": "1:00 PM"},
+            {"title": "Walk", "scheduled_time": "5:00 PM"},
+            {"title": "Dinner", "scheduled_time": "8:00 PM"},
+            {"title": "Sleep", "scheduled_time": "10:00 PM"},
+        ]
+        for item in default_routines:
+            db.add(DailyRoutineItem(patient_id=patient.id, title=item["title"], scheduled_time=item["scheduled_time"]))
+        db.commit()
     elif new_user.role == 'caregiver':
         db.add(Caregiver(user_id=new_user.id))
-    db.commit()
+        db.commit()
 
     return new_user
 

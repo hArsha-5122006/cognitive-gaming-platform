@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { t } from '../services/translations';
 
 const TYPE_EMOJI = {
   medicine: '💊',
@@ -14,24 +13,19 @@ function Reminders({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
+  const [newTitle, setNewTitle] = useState('');
+  const [newType, setNewType] = useState('medicine');
+  const [newTime, setNewTime] = useState('');
 
   const loadReminders = async () => {
     try {
       const token = localStorage.getItem('token');
       const data = await api.getReminders(token);
       setReminders(data);
-      api.cacheReminders(data);
       setError('');
     } catch (err) {
       console.error(err);
-      // Use cached reminders if offline
-      const cached = api.getCachedReminders();
-      if (cached.length > 0) {
-        setReminders(cached);
-        setError('Offline mode: showing cached reminders.');
-      } else {
-        setError('Failed to load reminders.');
-      }
+      setError('Failed to load reminders.');
     } finally {
       setLoading(false);
     }
@@ -46,10 +40,42 @@ function Reminders({ onBack }) {
       const token = localStorage.getItem('token');
       const updated = await api.completeReminder(token, id);
       setReminders(prev => prev.map(r => r.id === id ? updated : r));
-      api.cacheReminders(reminders.map(r => r.id === id ? updated : r));
     } catch (err) {
       console.error(err);
       setError('Failed to update reminder.');
+    }
+  };
+
+  const addReminder = async (e) => {
+    e.preventDefault();
+    if (!newTitle || !newTime) return;
+    try {
+      const token = localStorage.getItem('token');
+      // Build full datetime string: today's date + time
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const scheduledTime = `${today}T${newTime}:00`; // e.g., 2026-09-07T10:00:00
+
+      const res = await fetch('http://localhost:8000/api/reminders/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          reminder_type: newType,
+          scheduled_time: scheduledTime,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to add reminder');
+      const added = await res.json();
+      setReminders(prev => [...prev, added]);
+      setNewTitle('');
+      setNewTime('');
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to add reminder.');
     }
   };
 
@@ -65,14 +91,10 @@ function Reminders({ onBack }) {
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <button
-        onClick={onBack}
-        className="mb-6 bg-gray-200 hover:bg-gray-300 text-xl px-4 py-2 rounded-lg"
-      >
-        ← {t('back_to_games')}
+      <button onClick={onBack} className="mb-6 bg-gray-200 hover:bg-gray-300 text-xl px-4 py-2 rounded-lg">
+        ← Back
       </button>
-
-      <h1 className="text-4xl font-bold text-blue-800 mb-8">{t('reminders')}</h1>
+      <h1 className="text-4xl font-bold text-blue-800 mb-8">Reminders</h1>
 
       {loading && <p className="text-2xl text-gray-600">Loading...</p>}
       {error && <p className="text-red-600 text-xl mb-4">{error}</p>}
@@ -81,12 +103,7 @@ function Reminders({ onBack }) {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             {activeReminders.map((r) => (
-              <div
-                key={r.id}
-                className={`bg-white p-4 rounded-xl shadow-md flex items-center justify-between ${
-                  r.is_completed ? 'opacity-60' : ''
-                }`}
-              >
+              <div key={r.id} className="bg-white p-4 rounded-xl shadow-md flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">{TYPE_EMOJI[r.reminder_type] || '📌'}</span>
                   <div>
@@ -123,6 +140,38 @@ function Reminders({ onBack }) {
           )}
         </>
       )}
+
+      <form onSubmit={addReminder} className="mt-8 bg-white p-4 rounded-xl shadow-md max-w-2xl flex flex-col gap-3">
+        <h2 className="text-2xl font-bold text-gray-800">Add New Reminder</h2>
+        <input
+          type="text"
+          placeholder="Title (e.g., Take Medicine)"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          className="w-full p-3 text-xl border-2 rounded-lg"
+          required
+        />
+        <select
+          value={newType}
+          onChange={(e) => setNewType(e.target.value)}
+          className="w-full p-3 text-xl border-2 rounded-lg"
+        >
+          <option value="medicine">Medicine</option>
+          <option value="hydration">Hydration</option>
+          <option value="activity">Activity</option>
+          <option value="appointment">Appointment</option>
+        </select>
+        <input
+          type="time"
+          value={newTime}
+          onChange={(e) => setNewTime(e.target.value)}
+          className="w-full p-3 text-xl border-2 rounded-lg"
+          required
+        />
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-3 rounded-lg">
+          Add
+        </button>
+      </form>
     </div>
   );
 }

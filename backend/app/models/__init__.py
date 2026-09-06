@@ -10,3 +10,4 @@ from .recommendation import Recommendation
 from .reminder import Reminder
 from .notification import Notification
 from .caregiver_patient import caregiver_patient_association
+from .daily_routine import DailyRoutineItem

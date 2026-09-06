@@ -1,102 +1,130 @@
 import { useState, useEffect } from 'react';
-import { t } from '../services/translations';
-
-// Static routine items (English/Telugu)
-const ROUTINE_ITEMS = [
-  { id: 1, time: '7:00 AM', emoji: '☀️', label: 'Morning Wake-up', teLabel: 'ఉదయం నిద్రలేవడం' },
-  { id: 2, time: '8:00 AM', emoji: '🍳', label: 'Breakfast', teLabel: 'అల్పాహారం' },
-  { id: 3, time: '10:00 AM', emoji: '💊', label: 'Medicine', teLabel: 'మందులు' },
-  { id: 4, time: '12:00 PM', emoji: '💧', label: 'Drink Water', teLabel: 'నీరు త్రాగడం' },
-  { id: 5, time: '1:00 PM', emoji: '🍚', label: 'Lunch', teLabel: 'భోజనం' },
-  { id: 6, time: '5:00 PM', emoji: '🚶', label: 'Walk', teLabel: 'నడక' },
-  { id: 7, time: '8:00 PM', emoji: '🍲', label: 'Dinner', teLabel: 'రాత్రి భోజనం' },
-  { id: 8, time: '10:00 PM', emoji: '😴', label: 'Sleep', teLabel: 'నిద్ర' },
-];
-
-const getDateKey = () => new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+import { api } from '../services/api';
 
 function DailyRoutine({ onBack }) {
-  const [completed, setCompleted] = useState({});
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newTitle, setNewTitle] = useState('');
+  const [newTime, setNewTime] = useState('');
 
-  useEffect(() => {
-    const todayKey = getDateKey();
-    const saved = JSON.parse(localStorage.getItem('routine_' + todayKey)) || {};
-    setCompleted(saved);
-  }, []);
-
-  const toggleComplete = (id) => {
-    setCompleted(prev => {
-      const newState = { ...prev, [id]: !prev[id] };
-      localStorage.setItem('routine_' + getDateKey(), JSON.stringify(newState));
-      return newState;
-    });
+  const loadRoutine = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:8000/api/daily-routine/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch routine');
+      const data = await res.json();
+      setItems(data);
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load routine.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const allDone = ROUTINE_ITEMS.every(item => completed[item.id]);
-  const progress = ROUTINE_ITEMS.filter(item => completed[item.id]).length;
+  useEffect(() => {
+    loadRoutine();
+  }, []);
+
+  const toggleComplete = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:8000/api/daily-routine/${id}/complete`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to update');
+      const updated = await res.json();
+      setItems(prev => prev.map(item => item.id === id ? updated : item));
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update routine.');
+    }
+  };
+
+  const addItem = async (e) => {
+    e.preventDefault();
+    if (!newTitle || !newTime) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:8000/api/daily-routine/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: newTitle, scheduled_time: newTime }),
+      });
+      if (!res.ok) throw new Error('Failed to add');
+      const added = await res.json();
+      setItems(prev => [...prev, added]);
+      setNewTitle('');
+      setNewTime('');
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to add routine item.');
+    }
+  };
+
+  const completedCount = items.filter(item => item.is_completed).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 md:p-8">
-      <button
-        onClick={onBack}
-        className="mb-6 bg-white bg-opacity-70 hover:bg-opacity-100 text-gray-700 text-lg px-4 py-2 rounded-lg shadow transition"
-      >
-        ← {t('back_to_games')}
+    <div className="min-h-screen bg-gray-100 p-8">
+      <button onClick={onBack} className="mb-6 bg-gray-200 hover:bg-gray-300 text-xl px-4 py-2 rounded-lg">
+        ← Back
       </button>
+      <h1 className="text-4xl font-bold text-blue-800 mb-4">Today's Routine</h1>
+      <p className="text-xl text-gray-600 mb-6">{completedCount} of {items.length} completed</p>
 
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          <h1 className="text-4xl font-bold text-emerald-800 text-center mb-2">
-            {language === 'en' ? "Today's Routine" : 'నేటి దినచర్య'}
-          </h1>
-          <p className="text-center text-xl text-gray-600 mb-6">
-            {language === 'en' ? `${progress} of ${ROUTINE_ITEMS.length} completed` : `${ROUTINE_ITEMS.length}లో ${progress} పూర్తయ్యాయి`}
-          </p>
+      {loading && <p className="text-2xl text-gray-600">Loading...</p>}
+      {error && <p className="text-red-600 text-xl mb-4">{error}</p>}
 
-          {allDone && (
-            <div className="bg-green-100 border border-green-300 rounded-xl p-3 mb-6 text-center text-xl text-green-800">
-              {language === 'en' ? 'Great job! All activities completed!' : 'చాలా బాగా! అన్ని పనులు పూర్తయ్యాయి!'}
+      {!loading && !error && (
+        <div className="space-y-3 max-w-2xl">
+          {items.map((item) => (
+            <div key={item.id} className={`flex items-center justify-between p-4 rounded-xl border-2 ${item.is_completed ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className="text-2xl font-semibold text-gray-800">{item.title}</p>
+                <p className="text-lg text-gray-500">{item.scheduled_time}</p>
+              </div>
+              <button
+                onClick={() => toggleComplete(item.id)}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-2xl ${item.is_completed ? 'bg-green-500 text-white' : 'bg-white border-2 border-gray-300 text-transparent'}`}
+              >
+                ✓
+              </button>
             </div>
-          )}
-
-          <div className="space-y-3">
-            {ROUTINE_ITEMS.map((item) => {
-              const isCompleted = completed[item.id];
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition ${
-                    isCompleted
-                      ? 'bg-green-50 border-green-300'
-                      : 'bg-gray-50 border-gray-200 hover:border-emerald-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{item.emoji}</span>
-                    <div>
-                      <p className="text-2xl font-semibold text-gray-800">
-                        {language === 'en' ? item.label : item.teLabel}
-                      </p>
-                      <p className="text-lg text-gray-500">{item.time}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleComplete(item.id)}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-2xl transition ${
-                      isCompleted
-                        ? 'bg-green-500 text-white'
-                        : 'bg-white border-2 border-gray-300 text-transparent hover:border-green-500'
-                    }`}
-                  >
-                    ✓
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          ))}
         </div>
-      </div>
+      )}
+
+      <form onSubmit={addItem} className="mt-8 bg-white p-4 rounded-xl shadow-md max-w-2xl flex flex-col gap-3">
+        <h2 className="text-2xl font-bold text-gray-800">Add New Routine</h2>
+        <input
+          type="text"
+          placeholder="Title (e.g., Yoga)"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          className="w-full p-3 text-xl border-2 rounded-lg"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Time (e.g., 6:00 AM)"
+          value={newTime}
+          onChange={(e) => setNewTime(e.target.value)}
+          className="w-full p-3 text-xl border-2 rounded-lg"
+          required
+        />
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-3 rounded-lg">
+          Add
+        </button>
+      </form>
     </div>
   );
 }
