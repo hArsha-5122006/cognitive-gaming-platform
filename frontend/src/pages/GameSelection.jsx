@@ -1,21 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MemoryGame from '../games/MemoryGame';
 import SequenceGame from '../games/SequenceGame';
 import AttentionGame from '../games/AttentionGame';
 import PatternGame from '../games/PatternGame';
 import ReactionGame from '../games/ReactionGame';
 import LanguageGame from '../games/LanguageGame';
+import { t } from '../services/translations';
 
 function GameSelection({ onBack }) {
   const [selectedGameId, setSelectedGameId] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    // Hardcoded patientId=1 for demo; in real app, you'd get from /me or context
+    fetch('http://localhost:8000/api/recommendations/next_game/1', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then(res => res.json())
+    .then(data => setAiSuggestion(data))
+    .catch(console.error);
+  }, []);
 
   const games = [
-    { id: 1, name: 'Memory Game', emoji: '🧠', description: 'Remember the objects' },
-    { id: 2, name: 'Sequence Game', emoji: '🔢', description: 'Remember the order' },
-    { id: 3, name: 'Attention Game', emoji: '🎯', description: 'Find the target' },
-    { id: 4, name: 'Pattern Game', emoji: '🔷', description: 'Complete the pattern' },
-    { id: 5, name: 'Reaction Game', emoji: '⚡', description: 'Test your speed' },
-    { id: 6, name: 'Language Game', emoji: '📝', description: 'Word recall' },
+    { id: 1, name: t('memory_game'), emoji: '🧠', description: t('memory_game') },
+    { id: 2, name: t('sequence_game'), emoji: '🔢', description: t('sequence_game') },
+    { id: 3, name: t('attention_game'), emoji: '🎯', description: t('attention_game') },
+    { id: 4, name: t('pattern_game'), emoji: '🔷', description: t('pattern_game') },
+    { id: 5, name: t('reaction_game'), emoji: '⚡', description: t('reaction_game') },
+    { id: 6, name: t('language_game'), emoji: '📝', description: t('language_game') },
   ];
 
   if (selectedGameId === 1) return <MemoryGame onExit={() => setSelectedGameId(null)} />;
@@ -31,9 +45,19 @@ function GameSelection({ onBack }) {
         onClick={onBack}
         className="mb-6 bg-gray-200 hover:bg-gray-300 text-xl px-4 py-2 rounded-lg"
       >
-        ← Back
+        ← {t('back_to_games')}
       </button>
-      <h1 className="text-4xl font-bold text-blue-800 mb-8">Choose a Game</h1>
+      <h1 className="text-4xl font-bold text-blue-800 mb-8">{t('choose_game')}</h1>
+
+      {aiSuggestion && aiSuggestion.recommended_category && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl mb-6">
+          <p className="text-xl">
+            <strong>AI Suggestion:</strong> Try <strong>{aiSuggestion.recommended_category}</strong> game
+            because {aiSuggestion.reason}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {games.map((game) => (
           <button

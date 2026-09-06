@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import PatientHome from './pages/PatientHome';
 import GameSelection from './pages/GameSelection';
 import Reminders from './pages/Reminders';
@@ -14,18 +15,14 @@ function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
   const [language, setLanguageState] = useState(getLanguage());
+  const [isSignup, setIsSignup] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      // Sync pending results when back online
       const t = localStorage.getItem('token');
-      if (t) {
-        api.syncPendingResults(t).then(() => {
-          console.log('Pending results synced.');
-        });
-      }
+      if (t) api.syncPendingResults(t);
     };
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
@@ -50,6 +47,7 @@ function App() {
   const handleLogin = (newToken) => {
     setToken(newToken);
     setCurrentPage('home');
+    setIsSignup(false);
   };
 
   const handleLogout = () => {
@@ -66,7 +64,8 @@ function App() {
   };
 
   if (!token || !user) {
-    return <Login onLogin={handleLogin} />;
+    if (isSignup) return <Signup onSignupSuccess={() => setIsSignup(false)} />;
+    return <Login onLogin={handleLogin} onSwitchToSignup={() => setIsSignup(true)} />;
   }
 
   if (user.role === 'caregiver' || user.role === 'admin') {
@@ -80,20 +79,18 @@ function App() {
           You are offline. Games and reminders will be saved locally.
         </div>
       )}
-      {(() => {
-        switch (currentPage) {
-          case 'games':
-            return <GameSelection onBack={() => setCurrentPage('home')} />;
-          case 'reminders':
-            return <Reminders onBack={() => setCurrentPage('home')} />;
-          case 'progress':
-            return <Progress onBack={() => setCurrentPage('home')} />;
-          case 'routine':
-            return <DailyRoutine onBack={() => setCurrentPage('home')} />;
-          default:
-            return <PatientHome onNavigate={setCurrentPage} onLogout={handleLogout} language={language} onToggleLanguage={toggleLanguage} />;
-        }
-      })()}
+      {currentPage === 'games' && <GameSelection onBack={() => setCurrentPage('home')} />}
+      {currentPage === 'reminders' && <Reminders onBack={() => setCurrentPage('home')} />}
+      {currentPage === 'progress' && <Progress onBack={() => setCurrentPage('home')} />}
+      {currentPage === 'routine' && <DailyRoutine onBack={() => setCurrentPage('home')} />}
+      {currentPage === 'home' && (
+        <PatientHome
+          onNavigate={setCurrentPage}
+          onLogout={handleLogout}
+          language={language}
+          onToggleLanguage={toggleLanguage}
+        />
+      )}
     </div>
   );
 }

@@ -37,17 +37,24 @@ const useGameSession = (gameId, initialDifficulty = 'easy') => {
     const endTime = Date.now();
     const timeTaken = (endTime - sessionStartTime) / 1000;
     setIsActive(false);
-    const accuracy = attempts > 0 ? (attempts - mistakes) / attempts : 0;
+
+    const totalAttempts = resultsRef.current.length;
+    const totalMistakes = resultsRef.current.filter(r => r.is_correct === 0).length;
+    const totalCorrect = totalAttempts - totalMistakes;
+    const accuracy = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
+    const scoreValue = totalCorrect;
+
     const resultData = {
       game_id: gameId,
-      score,
+      score: scoreValue,
       accuracy,
       time_taken_seconds: timeTaken,
-      mistakes,
-      attempts,
+      mistakes: totalMistakes,
+      attempts: totalAttempts,
       difficulty_level: difficulty,
       results: resultsRef.current,
     };
+
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token');
@@ -55,11 +62,9 @@ const useGameSession = (gameId, initialDifficulty = 'easy') => {
       console.log('Result submitted successfully');
     } catch (error) {
       console.error('Failed to submit result:', error);
-      // Save for later sync
       api.savePendingResult(resultData);
-      console.log('Result saved locally for offline sync.');
     }
-  }, [isActive, sessionStartTime, attempts, mistakes, score, gameId, difficulty]);
+  }, [isActive, sessionStartTime, gameId, difficulty]);
 
   return {
     difficulty,

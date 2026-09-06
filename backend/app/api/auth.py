@@ -14,6 +14,8 @@ from app.core.security import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from app.models.user import User
+from app.models.patient import Patient
+from app.models.caregiver import Caregiver
 from app.schemas.user import UserCreate, UserOut, Token
 
 router = APIRouter()
@@ -40,14 +42,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    # Create new user
     hashed_password = get_password_hash(user_data.password)
     new_user = User(
         email=user_data.email,
@@ -59,6 +59,14 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Auto-create profile based on role
+    if new_user.role == 'patient':
+        db.add(Patient(user_id=new_user.id))
+    elif new_user.role == 'caregiver':
+        db.add(Caregiver(user_id=new_user.id))
+    db.commit()
+
     return new_user
 
 @router.post("/login", response_model=Token)
